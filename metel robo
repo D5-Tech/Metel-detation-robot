@@ -9,6 +9,7 @@ int motorPin2 = 19; // GPIO 19
 int motorPin3 = 23; // GPIO 23
 int motorPin4 = 22; // GPIO 22
 int servoPin = 5;   // GPIO 5
+int switchPin = 21; // GPIO 21 for the switch input
 
 String sliderValue = "";  // For storing the slider values
 unsigned long previousMillis = 0; 
@@ -29,14 +30,26 @@ void setup() {
   SerialBT.begin("ESP32_Car");  // Bluetooth device name
   Serial.begin(9600);
   Serial.println("Bluetooth Car Ready");
+
+  // Set switch pin as input
+  pinMode(switchPin, INPUT);
 }
 
 void loop() {
-  // Send "Hello" every second
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    SerialBT.println("Hello");  // Send "Hello" through Bluetooth
+  // Read the switch state
+  int switchState = digitalRead(switchPin);
+
+  // If the switch is pressed (HIGH signal)
+  if (switchState == HIGH) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+      SerialBT.println("Hello");  // Send "Hello" through Bluetooth
+      Serial.println("Hello");    // Display "Hello" on the Serial Monitor
+    }
+  } else {
+    // Optionally, print the switch status to the serial monitor when not pressed
+    Serial.println("Switch not pressed");
   }
 
   if (SerialBT.available()) {
