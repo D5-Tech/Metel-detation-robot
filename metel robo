@@ -9,11 +9,11 @@ int motorPin2 = 19; // GPIO 19
 int motorPin3 = 23; // GPIO 23
 int motorPin4 = 22; // GPIO 22
 int servoPin = 5;   // GPIO 5
-int switchPin = 21; // GPIO 21 for the switch input
+int metalDetectPin = 21; // GPIO 21 for metal detection switch
 
 String sliderValue = "";  // For storing the slider values
 unsigned long previousMillis = 0; 
-const long interval = 1000;  // Interval to send "Hello" every 1 second
+const long helloInterval = 1000;  // Interval to send "Hello" every 1 second
 
 void setup() {
   // Set motor pins as output
@@ -31,42 +31,45 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Bluetooth Car Ready");
 
-  // Set switch pin as input
-  pinMode(switchPin, INPUT);
+  // Set metal detection pin as input
+  pinMode(metalDetectPin, INPUT);
 }
 
 void loop() {
-  // Read the switch state
-  int switchState = digitalRead(switchPin);
-
-  // If the switch is pressed (HIGH signal)
-  if (switchState == HIGH) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
-      previousMillis = currentMillis;
-      SerialBT.println("Hello");  // Send "Hello" through Bluetooth
-      Serial.println("Hello");    // Display "Hello" on the Serial Monitor
-    }
+  // Check the metal detector state
+  int metalDetectState = digitalRead(metalDetectPin);
+  if (metalDetectState == HIGH) {
+    SerialBT.println("Metal Detected");
+    Serial.println("Metal Detected");  // Update serial monitor
   } else {
-    // Optionally, print the switch status to the serial monitor when not pressed
-    Serial.println("Switch not pressed");
+    SerialBT.println("Metal Not Detected");
+    Serial.println("Metal Not Detected");  // Update serial monitor
   }
 
+  // Send "Hello" message every second
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= helloInterval) {
+    previousMillis = currentMillis;
+    SerialBT.println("Hello");
+    Serial.println("Hello");  // Update serial monitor with "Hello"
+  }
+
+  // Handle Bluetooth input without delay
   if (SerialBT.available()) {
     char receivedChar = SerialBT.read();
-    
-    // Handle slider value command
+
+    // Handle slider value command immediately (without delay)
     if (receivedChar == 'X') {
       if (sliderValue.length() > 0) {
-        int sliderPosition = sliderValue.toInt();  
+        int sliderPosition = sliderValue.toInt();  // Get slider value as int
         int servoPosition = map(sliderPosition, 0, 100, 0, 180);  
-        myServo.write(servoPosition);  // Set servo position
+        myServo.write(servoPosition);  // Set servo position instantly
         Serial.print("Servo Position: ");
         Serial.println(servoPosition);
-        sliderValue = "";  // Clear slider value
+        sliderValue = "";  // Clear the slider value
       }
     } else if (isDigit(receivedChar)) {
-      sliderValue += receivedChar;  // Accumulate slider value characters
+      sliderValue += receivedChar;  // Accumulate slider value
     } else {
       // Process movement commands
       processMovement(receivedChar);
@@ -74,6 +77,7 @@ void loop() {
   }
 }
 
+// Function to process movement commands
 void processMovement(char command) {
   switch (command) {
     case 'F':  // Move forward
@@ -112,6 +116,7 @@ void processMovement(char command) {
   }
 }
 
+// Function to move motors
 void moveMotors(int m1, int m2, int m3, int m4) {
   digitalWrite(motorPin1, m1);
   digitalWrite(motorPin2, m2);
