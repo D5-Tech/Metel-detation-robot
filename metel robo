@@ -1,0 +1,93 @@
+#include <ESP32Servo.h>
+#include <BluetoothSerial.h>
+
+BluetoothSerial SerialBT;
+Servo myServo;
+
+int motorPin1 = 18; // GPIO 18
+int motorPin2 = 19; // GPIO 19
+int motorPin3 = 23; // GPIO 23
+int motorPin4 = 22; // GPIO 22
+int servoPin = 5;   // GPIO 5
+
+char command;
+
+void setup() {
+  // Set motor pins as output
+  pinMode(motorPin1, OUTPUT);
+  pinMode(motorPin2, OUTPUT);
+  pinMode(motorPin3, OUTPUT);
+  pinMode(motorPin4, OUTPUT);
+
+  // Attach the servo motor
+  myServo.attach(servoPin);
+
+  // Set initial servo position
+  myServo.write(90);
+
+  // Initialize Bluetooth serial communication
+  SerialBT.begin("ESP32_Car"); // Bluetooth device name
+  Serial.begin(9600);
+  Serial.println("Bluetooth Car Ready");
+}
+
+void loop() {
+  if (SerialBT.available()) {
+    command = SerialBT.read();
+    
+    // Print received command for debugging
+    Serial.print("Received command: ");
+    Serial.println(command);
+
+    // Control car movement
+    if (command == 'F') {  // Move forward
+      digitalWrite(motorPin1, HIGH);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, LOW);
+      digitalWrite(motorPin4, HIGH);
+      Serial.println("Moving forward");
+    } 
+    else if (command == 'B') {  // Move backward
+      digitalWrite(motorPin1, LOW);
+      digitalWrite(motorPin2, HIGH);
+      digitalWrite(motorPin3, HIGH);
+      digitalWrite(motorPin4, LOW);
+      Serial.println("Moving backward");
+    } 
+    else if (command == 'L') {  // Turn left
+      digitalWrite(motorPin1, LOW);
+      digitalWrite(motorPin2, HIGH);
+      digitalWrite(motorPin3, LOW);
+      digitalWrite(motorPin4, HIGH);
+      Serial.println("Turning left");
+    }
+    else if (command == 'R') {  // Turn right
+      digitalWrite(motorPin1, HIGH);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, HIGH);
+      digitalWrite(motorPin4, LOW);
+      Serial.println("Turning right");
+    }
+    else if (command == 'S') {  // Stop
+      digitalWrite(motorPin1, LOW);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, LOW);
+      digitalWrite(motorPin4, LOW);
+      Serial.println("Stopping");
+    }
+
+    // Control servo motor
+    if (command == 'U') {  // Turn servo to 180 degrees (left)
+      myServo.write(160);
+      Serial.println("Servo to 180 degrees");
+    } 
+    else if (command == 'D') {  // Turn servo to 0 degrees (right)
+      myServo.write(30);
+      Serial.println("Servo to 0 degrees");
+    } 
+    else if (command == 'C') {  // Center servo to 90 degrees
+      myServo.write(90);
+      Serial.println("Servo to 90 degrees");
+    }
+  }
+}
