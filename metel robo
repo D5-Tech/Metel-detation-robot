@@ -10,8 +10,9 @@ int motorPin3 = 23; // GPIO 23
 int motorPin4 = 22; // GPIO 22
 int servoPin = 5;   // GPIO 5
 
-char command;
-String sliderValue = "";
+String sliderValue = "";  // For storing the slider values
+unsigned long previousMillis = 0; 
+const long interval = 1000;  // Interval to send "Hello" every 1 second
 
 void setup() {
   // Set motor pins as output
@@ -22,75 +23,85 @@ void setup() {
 
   // Attach the servo motor
   myServo.attach(servoPin);
-
-  // Set initial servo position
-  myServo.write(90);
+  myServo.write(90);  // Set initial servo position
 
   // Initialize Bluetooth serial communication
-  SerialBT.begin("ESP32_Car"); // Bluetooth device name
+  SerialBT.begin("ESP32_Car");  // Bluetooth device name
   Serial.begin(9600);
   Serial.println("Bluetooth Car Ready");
 }
 
 void loop() {
+  // Send "Hello" every second
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    SerialBT.println("Hello");  // Send "Hello" through Bluetooth
+  }
+
   if (SerialBT.available()) {
     char receivedChar = SerialBT.read();
     
-    // Check for slider command
+    // Handle slider value command
     if (receivedChar == 'X') {
       if (sliderValue.length() > 0) {
-        int sliderPosition = sliderValue.toInt();  // Convert slider value to integer
-        int servoPosition = map(sliderPosition, 0, 100, 0, 180);  // Map slider value to servo range (0-180 degrees)
+        int sliderPosition = sliderValue.toInt();  
+        int servoPosition = map(sliderPosition, 0, 100, 0, 180);  
         myServo.write(servoPosition);  // Set servo position
         Serial.print("Servo Position: ");
         Serial.println(servoPosition);
-        sliderValue = "";  // Reset slider value for the next command
+        sliderValue = "";  // Clear slider value
       }
     } else if (isDigit(receivedChar)) {
       sliderValue += receivedChar;  // Accumulate slider value characters
     } else {
-      command = receivedChar;  // Handle car movement commands
-
-      // Control car movement
-      if (command == 'F') {  // Move forward
-        digitalWrite(motorPin1, HIGH);
-        digitalWrite(motorPin2, LOW);
-        digitalWrite(motorPin3, LOW);
-        digitalWrite(motorPin4, HIGH);
-        Serial.println("Moving forward");
-      } 
-      else if (command == 'B') {  // Move backward
-        digitalWrite(motorPin1, LOW);
-        digitalWrite(motorPin2, HIGH);
-        digitalWrite(motorPin3, HIGH);
-        digitalWrite(motorPin4, LOW);
-        Serial.println("Moving backward");
-      } 
-      else if (command == 'L') {  // Turn left
-        digitalWrite(motorPin1, LOW);
-        digitalWrite(motorPin2, HIGH);
-        digitalWrite(motorPin3, LOW);
-        digitalWrite(motorPin4, HIGH);
-        Serial.println("Turning left");
-      }
-      else if (command == 'R') {  // Turn right
-        digitalWrite(motorPin1, HIGH);
-        digitalWrite(motorPin2, LOW);
-        digitalWrite(motorPin3, HIGH);
-        digitalWrite(motorPin4, LOW);
-        Serial.println("Turning right");
-      }
-      else if (command == 'S') {  // Stop
-        digitalWrite(motorPin1, LOW);
-        digitalWrite(motorPin2, LOW);
-        digitalWrite(motorPin3, LOW);
-        digitalWrite(motorPin4, LOW);
-        Serial.println("Stopping");
-      }
-      else if (command == 'A') {  // Reset servo to 90 degrees
-        myServo.write(90);
-        Serial.println("Servo reset to 90 degrees");
-      }
+      // Process movement commands
+      processMovement(receivedChar);
     }
   }
+}
+
+void processMovement(char command) {
+  switch (command) {
+    case 'F':  // Move forward
+      moveMotors(HIGH, LOW, LOW, HIGH);
+      Serial.println("Moving forward");
+      break;
+
+    case 'B':  // Move backward
+      moveMotors(LOW, HIGH, HIGH, LOW);
+      Serial.println("Moving backward");
+      break;
+
+    case 'L':  // Turn left
+      moveMotors(LOW, HIGH, LOW, HIGH);
+      Serial.println("Turning left");
+      break;
+
+    case 'R':  // Turn right
+      moveMotors(HIGH, LOW, HIGH, LOW);
+      Serial.println("Turning right");
+      break;
+
+    case 'S':  // Stop
+      moveMotors(LOW, LOW, LOW, LOW);
+      Serial.println("Stopping");
+      break;
+
+    case 'A':  // Reset servo to 90 degrees
+      myServo.write(90);
+      Serial.println("Servo reset to 90 degrees");
+      break;
+
+    default:
+      // No valid command received
+      break;
+  }
+}
+
+void moveMotors(int m1, int m2, int m3, int m4) {
+  digitalWrite(motorPin1, m1);
+  digitalWrite(motorPin2, m2);
+  digitalWrite(motorPin3, m3);
+  digitalWrite(motorPin4, m4);
 }
