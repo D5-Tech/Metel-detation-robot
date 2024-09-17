@@ -36,6 +36,9 @@ void setup() {
 }
 
 void loop() {
+  // Check for real-time servo control first
+  handleSliderControl();
+
   // Check the metal detector state
   int metalDetectState = digitalRead(metalDetectPin);
   if (metalDetectState == HIGH) {
@@ -54,65 +57,71 @@ void loop() {
     Serial.println("Hello");  // Update serial monitor with "Hello"
   }
 
-  // Handle Bluetooth input without delay
-  if (SerialBT.available()) {
+  // Handle movement commands
+  handleMovementCommands();
+}
+
+// Function to handle slider control for the servo
+void handleSliderControl() {
+  while (SerialBT.available()) {
     char receivedChar = SerialBT.read();
 
-    // Handle slider value command immediately (without delay)
-    if (receivedChar == 'X') {
+    // Check if the incoming characters are for the slider value
+    if (isDigit(receivedChar)) {
+      sliderValue += receivedChar;  // Accumulate slider value characters
+    } else if (receivedChar == 'X') {  // 'X' signals end of slider value input
       if (sliderValue.length() > 0) {
-        int sliderPosition = sliderValue.toInt();  // Get slider value as int
+        int sliderPosition = sliderValue.toInt();  // Convert slider value to int
         int servoPosition = map(sliderPosition, 0, 100, 0, 180);  
-        myServo.write(servoPosition);  // Set servo position instantly
+        myServo.write(servoPosition);  // Instantly update the servo position
         Serial.print("Servo Position: ");
         Serial.println(servoPosition);
-        sliderValue = "";  // Clear the slider value
+        sliderValue = "";  // Clear the slider value for next input
       }
-    } else if (isDigit(receivedChar)) {
-      sliderValue += receivedChar;  // Accumulate slider value
-    } else {
-      // Process movement commands
-      processMovement(receivedChar);
     }
   }
 }
 
-// Function to process movement commands
-void processMovement(char command) {
-  switch (command) {
-    case 'F':  // Move forward
-      moveMotors(HIGH, LOW, LOW, HIGH);
-      Serial.println("Moving forward");
-      break;
+// Function to handle movement commands from Bluetooth
+void handleMovementCommands() {
+  if (SerialBT.available()) {
+    char receivedChar = SerialBT.read();
+    
+    switch (receivedChar) {
+      case 'F':  // Move forward
+        moveMotors(HIGH, LOW, LOW, HIGH);
+        Serial.println("Moving forward");
+        break;
 
-    case 'B':  // Move backward
-      moveMotors(LOW, HIGH, HIGH, LOW);
-      Serial.println("Moving backward");
-      break;
+      case 'B':  // Move backward
+        moveMotors(LOW, HIGH, HIGH, LOW);
+        Serial.println("Moving backward");
+        break;
 
-    case 'L':  // Turn left
-      moveMotors(LOW, HIGH, LOW, HIGH);
-      Serial.println("Turning left");
-      break;
+      case 'L':  // Turn left
+        moveMotors(LOW, HIGH, LOW, HIGH);
+        Serial.println("Turning left");
+        break;
 
-    case 'R':  // Turn right
-      moveMotors(HIGH, LOW, HIGH, LOW);
-      Serial.println("Turning right");
-      break;
+      case 'R':  // Turn right
+        moveMotors(HIGH, LOW, HIGH, LOW);
+        Serial.println("Turning right");
+        break;
 
-    case 'S':  // Stop
-      moveMotors(LOW, LOW, LOW, LOW);
-      Serial.println("Stopping");
-      break;
+      case 'S':  // Stop
+        moveMotors(LOW, LOW, LOW, LOW);
+        Serial.println("Stopping");
+        break;
 
-    case 'A':  // Reset servo to 90 degrees
-      myServo.write(90);
-      Serial.println("Servo reset to 90 degrees");
-      break;
+      case 'A':  // Reset servo to 90 degrees
+        myServo.write(90);
+        Serial.println("Servo reset to 90 degrees");
+        break;
 
-    default:
-      // No valid command received
-      break;
+      default:
+        // No valid command received
+        break;
+    }
   }
 }
 
