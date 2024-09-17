@@ -33,6 +33,9 @@ void setup() {
 
   // Set metal detection pin as input
   pinMode(metalDetectPin, INPUT);
+  
+  // Initialize random number generator for the depth
+  randomSeed(analogRead(0));
 }
 
 void loop() {
@@ -44,6 +47,15 @@ void loop() {
   if (metalDetectState == HIGH) {
     SerialBT.println("Metal Detected");
     Serial.println("Metal Detected");  // Update serial monitor
+
+    // Generate a random number between 1 and 6 to simulate depth
+    int metalDepth = random(1, 7);  // Generates a random number between 1 and 6
+
+    // Print the range (depth) of the detected metal
+    SerialBT.print("Range: ");
+    SerialBT.println(metalDepth);
+    Serial.print("Range: ");
+    Serial.println(metalDepth);  // Update serial monitor
   } else {
     SerialBT.println("Metal Not Detected");
     Serial.println("Metal Not Detected");  // Update serial monitor
