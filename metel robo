@@ -92,22 +92,22 @@ void handleMovementCommands() {
     
     switch (receivedChar) {
       case 'F':  // Move forward
-        moveMotors(HIGH, LOW, LOW, HIGH);
+        moveMotors(HIGH, LOW, HIGH, LOW);
         printWithDelay("Moving forward");
         break;
 
       case 'B':  // Move backward
-        moveMotors(LOW, HIGH, HIGH, LOW);
+        moveMotors(LOW, HIGH, LOW, HIGH);
         printWithDelay("Moving backward");
         break;
 
       case 'L':  // Turn left
-        moveMotors(LOW, HIGH, LOW, HIGH);
+        moveMotors(HIGH, LOW, LOW, HIGH);
         printWithDelay("Turning left");
         break;
 
       case 'R':  // Turn right
-        moveMotors(HIGH, LOW, HIGH, LOW);
+        moveMotors(LOW, HIGH, HIGH, LOW);
         printWithDelay("Turning right");
         break;
 
