@@ -14,6 +14,9 @@ int buzzerPin = 16;  // GPIO 16 for buzzer
 
 String sliderValue = "";  // For storing the slider values
 
+unsigned long previousPrintMillis = 0;
+const long printInterval = 2000;  // 2 second delay for Serial printing
+
 void setup() {
   // Set motor pins as output
   pinMode(motorPin1, OUTPUT);
@@ -46,22 +49,15 @@ void loop() {
   // Check the metal detector state
   int metalDetectState = digitalRead(metalDetectPin);
   if (metalDetectState == HIGH) {
-    SerialBT.println("Metal Detected");
-    Serial.println("Metal Detected");  // Update serial monitor
+    printWithDelay("Metal Detected");  // Use the custom print function
 
     // Generate and display a random depth between 1 and 7
     int randomDepth = random(1, 8);  // Random number between 1 and 7
-    SerialBT.print("Estimated Depth: ");
-    SerialBT.print(randomDepth);
-    SerialBT.println(" cm");
-    Serial.print("Estimated Depth: ");
-    Serial.print(randomDepth);
-    Serial.println(" cm");
+    printWithDelay("Estimated Depth: " + String(randomDepth) + " cm");
 
     digitalWrite(buzzerPin, HIGH);  // Turn on the buzzer
   } else {
-    SerialBT.println("Metal Not Detected");
-    Serial.println("Metal Not Detected");  // Update serial monitor
+    printWithDelay("Metal Not Detected");  // Use the custom print function
     digitalWrite(buzzerPin, LOW);  // Turn off the buzzer
   }
 
@@ -82,8 +78,7 @@ void handleSliderControl() {
         int sliderPosition = sliderValue.toInt();  // Convert slider value to int
         int servoPosition = map(sliderPosition, 0, 100, 0, 180);  
         myServo.write(servoPosition);  // Instantly update the servo position
-        Serial.print("Servo Position: ");
-        Serial.println(servoPosition);
+        printWithDelay("Servo Position: " + String(servoPosition));
         sliderValue = "";  // Clear the slider value for next input
       }
     }
@@ -98,32 +93,32 @@ void handleMovementCommands() {
     switch (receivedChar) {
       case 'F':  // Move forward
         moveMotors(HIGH, LOW, LOW, HIGH);
-        Serial.println("Moving forward");
+        printWithDelay("Moving forward");
         break;
 
       case 'B':  // Move backward
         moveMotors(LOW, HIGH, HIGH, LOW);
-        Serial.println("Moving backward");
+        printWithDelay("Moving backward");
         break;
 
       case 'L':  // Turn left
         moveMotors(LOW, HIGH, LOW, HIGH);
-        Serial.println("Turning left");
+        printWithDelay("Turning left");
         break;
 
       case 'R':  // Turn right
         moveMotors(HIGH, LOW, HIGH, LOW);
-        Serial.println("Turning right");
+        printWithDelay("Turning right");
         break;
 
       case 'S':  // Stop
         moveMotors(LOW, LOW, LOW, LOW);
-        Serial.println("Stopping");
+        printWithDelay("Stopping");
         break;
 
       case 'A':  // Reset servo to 90 degrees
         myServo.write(90);
-        Serial.println("Servo reset to 90 degrees");
+        printWithDelay("Servo reset to 90 degrees");
         break;
 
       default:
@@ -139,4 +134,14 @@ void moveMotors(int m1, int m2, int m3, int m4) {
   digitalWrite(motorPin2, m2);
   digitalWrite(motorPin3, m3);
   digitalWrite(motorPin4, m4);
+}
+
+// Custom function to print with a 2-second delay
+void printWithDelay(String message) {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousPrintMillis >= printInterval) {
+    previousPrintMillis = currentMillis;
+    Serial.println(message);
+    SerialBT.println(message);  // Optional: Also send via Bluetooth
+  }
 }
