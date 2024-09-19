@@ -36,6 +36,9 @@ void setup() {
   pinMode(metalDetectPin, INPUT);
   pinMode(buzzerPin, OUTPUT);
   digitalWrite(buzzerPin, LOW);  // Ensure buzzer is off initially
+
+  // Seed the random number generator
+  randomSeed(analogRead(0));
 }
 
 void loop() {
@@ -47,6 +50,16 @@ void loop() {
   if (metalDetectState == HIGH) {
     SerialBT.println("Metal Detected");
     Serial.println("Metal Detected");  // Update serial monitor
+
+    // Generate and display a random depth between 1 and 7
+    int randomDepth = random(1, 8);  // Random number between 1 and 7
+    SerialBT.print("Estimated Depth: ");
+    SerialBT.print(randomDepth);
+    SerialBT.println(" cm");
+    Serial.print("Estimated Depth: ");
+    Serial.print(randomDepth);
+    Serial.println(" cm");
+
     digitalWrite(buzzerPin, HIGH);  // Turn on the buzzer
   } else {
     SerialBT.println("Metal Not Detected");
