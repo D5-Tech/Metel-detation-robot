@@ -10,6 +10,7 @@ int motorPin3 = 23; // GPIO 23
 int motorPin4 = 22; // GPIO 22
 int servoPin = 5;   // GPIO 5
 int metalDetectPin = 21; // GPIO 21 for metal detection switch
+int buzzerPin = 16;  // GPIO 16 for buzzer
 
 String sliderValue = "";  // For storing the slider values
 unsigned long previousMillis = 0; 
@@ -31,8 +32,10 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Bluetooth Car Ready");
 
-  // Set metal detection pin as input
+  // Set metal detection and buzzer pins
   pinMode(metalDetectPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW);  // Ensure buzzer is off initially
 }
 
 void loop() {
@@ -44,9 +47,11 @@ void loop() {
   if (metalDetectState == HIGH) {
     SerialBT.println("Metal Detected");
     Serial.println("Metal Detected");  // Update serial monitor
+    digitalWrite(buzzerPin, HIGH);  // Turn on the buzzer
   } else {
     SerialBT.println("Metal Not Detected");
     Serial.println("Metal Not Detected");  // Update serial monitor
+    digitalWrite(buzzerPin, LOW);  // Turn off the buzzer
   }
 
   // Send "Hello" message every second
