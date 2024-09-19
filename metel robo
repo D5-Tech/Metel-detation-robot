@@ -13,8 +13,6 @@ int metalDetectPin = 21; // GPIO 21 for metal detection switch
 int buzzerPin = 16;  // GPIO 16 for buzzer
 
 String sliderValue = "";  // For storing the slider values
-unsigned long previousMillis = 0; 
-const long helloInterval = 1000;  // Interval to send "Hello" every 1 second
 
 void setup() {
   // Set motor pins as output
@@ -65,14 +63,6 @@ void loop() {
     SerialBT.println("Metal Not Detected");
     Serial.println("Metal Not Detected");  // Update serial monitor
     digitalWrite(buzzerPin, LOW);  // Turn off the buzzer
-  }
-
-  // Send "Hello" message every second
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= helloInterval) {
-    previousMillis = currentMillis;
-    SerialBT.println("Hello");
-    Serial.println("Hello");  // Update serial monitor with "Hello"
   }
 
   // Handle movement commands
