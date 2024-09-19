@@ -10,7 +10,9 @@ int motorPin3 = 23; // GPIO 23
 int motorPin4 = 22; // GPIO 22
 int servoPin = 5;   // GPIO 5
 int metalDetectPin = 21; // GPIO 21 for metal detection switch
+int metalSignalPin = 16; // GPIO 16 for output when metal is detected
 
+bool metalDetectedPreviously = false;  // To track the previous state of metal detection
 String sliderValue = "";  // For storing the slider values
 unsigned long previousMillis = 0; 
 const long helloInterval = 1000;  // Interval to send "Hello" every 1 second
@@ -34,6 +36,9 @@ void setup() {
   // Set metal detection pin as input
   pinMode(metalDetectPin, INPUT);
   
+  // Set metal signal pin as output
+  pinMode(metalSignalPin, OUTPUT);
+
   // Initialize random number generator for the depth
   randomSeed(analogRead(0));
 }
@@ -44,9 +49,15 @@ void loop() {
 
   // Check the metal detector state
   int metalDetectState = digitalRead(metalDetectPin);
-  if (metalDetectState == HIGH) {
+
+  // Handle Metal Detection Status Change
+  if (metalDetectState == HIGH && !metalDetectedPreviously) {
+    // Metal detected and it was not detected previously
     SerialBT.println("Metal Detected");
-    Serial.println("Metal Detected");  // Update serial monitor
+    Serial.println("Metal Detected");
+
+    // Set the metal signal pin HIGH
+    digitalWrite(metalSignalPin, HIGH);
 
     // Generate a random number between 1 and 6 to simulate depth
     int metalDepth = random(1, 7);  // Generates a random number between 1 and 6
@@ -55,10 +66,21 @@ void loop() {
     SerialBT.print("Range: ");
     SerialBT.println(metalDepth);
     Serial.print("Range: ");
-    Serial.println(metalDepth);  // Update serial monitor
-  } else {
+    Serial.println(metalDepth);
+
+    // Update the state to indicate metal is detected
+    metalDetectedPreviously = true;
+  }
+  else if (metalDetectState == LOW && metalDetectedPreviously) {
+    // Metal is not detected now, but was detected previously
     SerialBT.println("Metal Not Detected");
-    Serial.println("Metal Not Detected");  // Update serial monitor
+    Serial.println("Metal Not Detected");
+
+    // Set the metal signal pin LOW
+    digitalWrite(metalSignalPin, LOW);
+
+    // Update the state to indicate metal is not detected
+    metalDetectedPreviously = false;
   }
 
   // Send "Hello" message every second
